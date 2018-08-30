@@ -11,26 +11,61 @@ export default class BooksApp extends React.Component {
               read: [],
               wantToRead: [],
               currentlyReading: []
+              loading: true,
           }
       }
 
 //Function is called right before the first render.
-      componentWillMount() {
-          BooksAPI.getAll().then(books => {
-              this.setState({
-                  read: books.filter(b => b.shelf === 'read'),
-                  wantToRead: books.filter(b => b.shelf === 'wantToRead'),
-                  currentlyReading: books.filter(b => b.shelf === 'currentlyReading')
-              })
-          })
-      }
+      componentDidMount() {
+      BooksAPI.getAll()
+      .then(books => this.setState({ books }))
+      .catch(errorMessage);
+   }
+      onShelfChange = (book, shelf) => {
+        BooksAPI.update(book, shelf)
+            .then(
+                this.setState((state) => ({
+                    books: state.books.map(b => {
+                        if (b.title === book.title) {
+                            b.shelf = shelf;
+                            return b
+                        } else {
+                            return b
+                        }
+                    }),
+                    loading: false
+                }))
+            )
+    };
+    addBookToShelf(book, shelf) {
+        book.shelf = shelf
+        this.setState({ [shelf]: this.state[shelf].concat(book) })
+    }
        render() {
           return (
               <div className="app">
-                  <Route path="/" exact render={() => (
+              <div className='header'>
+              MyReads
+              </div>
+              <Switch>
+                  <Route exact path="/" render={() => (
                       <BookShelfList
                           currentlyReading={this.state.currentlyReading}
                           wantToRead={this.state.wantToRead}
                           read={this.state.read}
                       />
                   )}/>
+                  <Route
+                      path='/search'
+                      render={() => (
+                          <SearchPage
+                              currentlyReading={this.state.currentlyReading}
+                              wantToRead={this.state.wantToRead}
+                              read={this.state.read}
+                          />
+                      )}
+                  />
+                  <Route component={NotFoundPage} />
+              </Switch>
+          </div>
+      </div>
