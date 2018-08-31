@@ -1,104 +1,81 @@
 import React from 'react'
-// import * as BooksAPI from './BooksAPI'
+import * as BooksAPI from './BooksAPI'
 import './App.css'
 import BookShelfList from "./components/BookShelfList";
-
+import SearchBook from "./components/SearchBook";
+import {Route} from 'react-router-dom';
 
 export default class BooksApp extends React.Component {
-      constructor(args) {
-          super(args);
-          this.state = {
-              read: [],
-              wantToRead: [],
-              currentlyReading: []
-              loading: true,
-          }
-      }
-
-      componentDidMount() {
-          BooksAPI.getAll()
-            .then(books => this.setState({ books }))
-            .catch(errorMessage);
+    constructor(args) {
+        super(args);
+        this.state = {
+            books: [],
+            loading: true,
         }
-
-        componentDidUpdate(_, prevState) {
-
-          if (prevState.books.length !== this.state.books.length) {
-
-            BooksAPI.getAll()
-              .then(books => this.setState({ books }))
-              .catch(errorMessage);
-          }
-        }
-
-        /**
-         changeBook - The book to manipulate
-         newValue - The new shelf value for the book
-         */
-        changeShelf(changeBook, newValue) {
-          // Push change to through API
-          BooksAPI.update(changeBook, newValue)
-          .catch(errorMessage);
-
-          this.setState(prevState => {
-            let books = []; // For modifying data before pushing to state
-
-            // Book to change was not in the previous state
-            if (!prevState.books.includes(changeBook)) {
-              changeBook['shelf'] = newValue;                 // Add and set the new shelf value
-              books.concat(prevState.books).push(changeBook); // Combine with the previous state
-
-              addMessage(newValue);
-            }
-            else {
-              // Return a modified array from previous state
-              books = prevState.books.map(book => {
-
-                if (book === changeBook) {
-                  book.shelf = newValue;  // Modify the shelf value
-                  return book;            // Push into new array
-                }
-                else {
-                  return book;            // Otherwise, push unmodified
-                }
-              })
-
-              moveMessage(newValue);
-            }
-
-            return { books }; // Pass new value to the state
-          });
-
-        }
-    addBookToShelf(book, shelf) {
-        book.shelf = shelf
-        this.setState({ [shelf]: this.state[shelf].concat(book) })
     }
-       render() {
-          return (
-              <div className="app">
-              <div className='header'>
-              MyReads
-              </div>
-              <Switch>
-                  <Route exact path="/" render={() => (
-                      <BookShelfList
-                          currentlyReading={this.state.currentlyReading}
-                          wantToRead={this.state.wantToRead}
-                          read={this.state.read}
-                      />
-                  )}/>
-                  <Route
-                      path='/search'
-                      render={() => (
-                          <SearchPage
-                              currentlyReading={this.state.currentlyReading}
-                              wantToRead={this.state.wantToRead}
-                              read={this.state.read}
-                          />
-                      )}
-                  />
-                  <Route component={NotFoundPage} />
-              </Switch>
-          </div>
-      </div>
+
+    componentDidMount() {
+        BooksAPI.getAll().then(books => {
+            this.setState({books: books, loading: false})
+        })
+    }
+
+    onShelfChange = (book, shelf) => {
+        BooksAPI.update(book, shelf)
+            .then(
+              //previous state
+                this.setState((state) => ({
+                  //onChangeBook
+                    books: state.books.map(b => {
+                        if (b.title === book.title) {
+                            b.shelf = shelf;
+                            //return new array
+                            return b
+                        } else {
+                          //push unmodified
+                            return b
+                        }
+                    }),
+                    loading: false
+                }))
+            )
+    };
+
+    render() {
+        const state = this.state;
+        const currentlyReading = state.books.filter((book) => book.shelf === 'currentlyReading')
+        const wantToRead = state.books.filter((book) => book.shelf === 'wantToRead')
+        const read = state.books.filter((book) => book.shelf === 'read')
+
+        return (
+            <div className="app">
+                <Route exact path="/" render={() => (
+                    <div>
+                        <div className="list-books-title">
+                            <h1>myReads: Your Personal Library</h1>
+                        </div>
+                        {
+                            !state.loading ? (
+                                <BookShelfList
+                                    currentlyReading={currentlyReading}
+                                    wantToRead={wantToRead}
+                                    read={read}
+                                    onShelfChange={this.onShelfChange}
+                                />
+                            ) : (
+                                <div className="loader"/>
+                            )
+                        }
+                    </div>
+                )}/>
+                <Route path="/search" render={({history}) => (
+                    <SearchBook
+                        onShelfChange={this.onShelfChange}
+                        history={history}
+                        books={currentlyReading.concat(wantToRead, read)}
+                    />
+                )}/>
+            </div>
+        )
+    }
+}
