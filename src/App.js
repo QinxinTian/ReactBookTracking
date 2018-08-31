@@ -56,6 +56,7 @@ export default class BooksApp extends React.Component {
                         </div>
                         {
                             !state.loading ? (
+                              //we are using the import in the BookShelfList.
                                 <BookShelfList
                                     currentlyReading={currentlyReading}
                                     wantToRead={wantToRead}
