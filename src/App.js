@@ -23,16 +23,12 @@ export default class BooksApp extends React.Component {
     onShelfChange = (book, shelf) => {
         BooksAPI.update(book, shelf)
             .then(
-              //previous state
                 this.setState((state) => ({
-                  //onChangeBook
                     books: state.books.map(b => {
                         if (b.title === book.title) {
                             b.shelf = shelf;
-                            //return new array
                             return b
                         } else {
-                          //push unmodified
                             return b
                         }
                     }),
@@ -49,14 +45,13 @@ export default class BooksApp extends React.Component {
 
         return (
             <div className="app">
-                <Route exact path="/" render={() => (
+                <Route path="/" exact render={() => (
                     <div>
                         <div className="list-books-title">
                             <h1>myReads: Your Personal Library</h1>
                         </div>
                         {
                             !state.loading ? (
-                              //we are using the import in the BookShelfList.
                                 <BookShelfList
                                     currentlyReading={currentlyReading}
                                     wantToRead={wantToRead}
