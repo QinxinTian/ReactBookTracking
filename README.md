@@ -1,4 +1,7 @@
 # ReactBookTracking
+- For easy display:
+https://reactbookstrackingnsearching.herokuapp.com/
+- I created a bookshelf app that allows you to select and categorize books you have read, are currently reading, or want to read. The project using React to build the application and provides an API server and client library that you will use to persist information as you interact with the application, also I implemented the searching functionality that you can search the books then add to the shelves.
 
 
 
